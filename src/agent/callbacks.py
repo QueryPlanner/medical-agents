@@ -17,6 +17,53 @@ from google.adk.tools.base_tool import BaseTool
 logger = logging.getLogger(__name__)
 
 
+async def save_image_to_artifact(callback_context: CallbackContext) -> None:
+    """Save user image to artifact if present.
+
+    Args:
+        callback_context: The callback context with access to invocation context
+    """
+    if not callback_context.user_content or not callback_context.user_content.parts:
+        return
+
+    for part in callback_context.user_content.parts:
+        # Check if part is an image
+        if part.inline_data and part.inline_data.mime_type.startswith("image/"):
+            logger.info("Found image in user content. Saving as artifact.")
+            try:
+                # We save it as a user-scoped artifact so sub-agents can access it
+                await callback_context.save_artifact(
+                    filename="user:current_medical_image",
+                    artifact=part
+                )
+                logger.info("Successfully saved artifact 'user:current_medical_image'")
+            except Exception as e:
+                logger.error(f"Failed to save image artifact: {e}")
+
+
+async def load_image_artifact(
+    callback_context: CallbackContext,
+    llm_request: LlmRequest,
+) -> None:
+    """Load image artifact and append to LLM request if available.
+
+    Args:
+        callback_context: The callback context
+        llm_request: The LLM request object
+    """
+    try:
+        # Try to load the user-scoped artifact
+        artifact = await callback_context.load_artifact("user:current_medical_image")
+        if artifact:
+            logger.info("Found artifact 'user:current_medical_image'. Appending.")
+            # Append to the last message in the request (the current turn)
+            if llm_request.contents:
+                llm_request.contents[-1].parts.append(artifact)
+    except Exception as e:
+        # It's okay if artifact doesn't exist (maybe no image was uploaded yet)
+        logger.debug(f"Could not load image artifact (normal if none exists): {e}")
+
+
 async def add_session_to_memory(callback_context: CallbackContext) -> None:
     """Automatically save completed sessions to memory bank.
 

@@ -27,6 +27,9 @@ def return_instruction_root() -> str:
     If the input is a medical image, route it to the ImageAnalyzerAgent.
 
     Analyze the user's input (text and/or image) and delegate to the correct agent.
+
+    IMPORTANT: When a tool (sub-agent) returns a response, you MUST output it EXACTLY as is.
+    Do NOT summarize, rephrase, or modify the tool's output. Return the raw JSON or text received from the tool.
     """
 
 
