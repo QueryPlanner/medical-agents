@@ -10,7 +10,7 @@ from google.adk.tools import AgentTool
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
 from .callbacks import LoggingCallbacks, add_session_to_memory
-from .model import model
+from .model import router_model
 from .prompt import (
     return_description_root,
     return_global_instruction,
@@ -29,10 +29,10 @@ root_agent = LlmAgent(
     description=return_description_root(),
     before_agent_callback=logging_callbacks.before_agent,
     after_agent_callback=[logging_callbacks.after_agent, add_session_to_memory],
-    model=model,
+    model=router_model,
     instruction=return_instruction_root(),
     tools=[
-        PreloadMemoryTool(),
+        #PreloadMemoryTool(),
         AgentTool(icd10_agent),
         AgentTool(soap_agent),
         AgentTool(image_agent),
