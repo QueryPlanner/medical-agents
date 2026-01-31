@@ -1,11 +1,8 @@
 """Tests for model configuration."""
 
-import sys
 from unittest.mock import MagicMock, patch
 
-import pytest
 from agent.model import create_model
-from agent.utils.config import ServerEnv
 
 
 class TestCreateModel:
@@ -13,13 +10,15 @@ class TestCreateModel:
 
     @patch("agent.model.env")
     @patch("agent.model.ThinkingLiteLlm")
-    def test_create_model_local(self, mock_thinking: MagicMock, mock_env: MagicMock) -> None:
+    def test_create_model_local(
+        self, mock_thinking: MagicMock, mock_env: MagicMock
+    ) -> None:
         """Test create_model with LOCAL provider."""
         mock_env.local_model_base_url = "http://localhost:11434"
         mock_env.local_model_name = "llama3"
-        
+
         create_model("llama3", "LOCAL")
-        
+
         mock_thinking.assert_called_once()
         call_kwargs = mock_thinking.call_args.kwargs
         assert call_kwargs["model"] == "openai/llama3"
@@ -27,13 +26,15 @@ class TestCreateModel:
 
     @patch("agent.model.env")
     @patch("agent.model.ThinkingLiteLlm")
-    def test_create_model_local_with_v1(self, mock_thinking: MagicMock, mock_env: MagicMock) -> None:
+    def test_create_model_local_with_v1(
+        self, mock_thinking: MagicMock, mock_env: MagicMock
+    ) -> None:
         """Test create_model with LOCAL provider where base_url ends with /v1."""
         mock_env.local_model_base_url = "http://localhost:11434/v1"
         mock_env.local_model_name = "llama3"
-        
+
         create_model("llama3", "LOCAL")
-        
+
         mock_thinking.assert_called_once()
         call_kwargs = mock_thinking.call_args.kwargs
         assert call_kwargs["api_base"] == "http://localhost:11434/v1"
@@ -42,7 +43,7 @@ class TestCreateModel:
     def test_create_model_local_missing_config(self, mock_env: MagicMock) -> None:
         """Test create_model with LOCAL provider but missing config."""
         mock_env.local_model_base_url = None
-        
+
         result = create_model("llama3", "LOCAL")
         assert result == "llama3"
 

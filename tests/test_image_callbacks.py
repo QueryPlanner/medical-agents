@@ -2,7 +2,7 @@
 
 import logging
 from typing import Any, cast
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 from google.adk.agents.callback_context import CallbackContext
@@ -19,7 +19,9 @@ class MockInlineData:
 
 
 class MockPart:
-    def __init__(self, inline_data: MockInlineData | None = None, text: str | None = None) -> None:
+    def __init__(
+        self, inline_data: MockInlineData | None = None, text: str | None = None
+    ) -> None:
         self.inline_data = inline_data
         self.text = text
 
@@ -53,7 +55,7 @@ class TestSaveImageToArtifact:
     async def test_save_image_success(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test saving an image when present in user content."""
         caplog.set_level(logging.INFO)
-        
+
         # Setup mock with image part
         image_part = MockPart(inline_data=MockInlineData(mime_type="image/jpeg"))
         text_part = MockPart(text="analyze this")
@@ -68,7 +70,7 @@ class TestSaveImageToArtifact:
         call_args = context.save_artifact.call_args
         assert call_args.kwargs["filename"] == "user:current_medical_image"
         assert call_args.kwargs["artifact"] == image_part
-        
+
         # Verify logging
         assert "Found image in user content" in caplog.text
         assert "Successfully saved artifact" in caplog.text
@@ -77,7 +79,7 @@ class TestSaveImageToArtifact:
     async def test_no_image_in_content(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test doing nothing when no image is present."""
         caplog.set_level(logging.INFO)
-        
+
         # Setup mock with only text
         text_part = MockPart(text="hello")
         content = MockContent(parts=[text_part])
@@ -108,7 +110,7 @@ class TestSaveImageToArtifact:
     async def test_save_error(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test handling error during save."""
         caplog.set_level(logging.ERROR)
-        
+
         # Setup mock to raise exception
         image_part = MockPart(inline_data=MockInlineData(mime_type="image/png"))
         content = MockContent(parts=[image_part])
@@ -129,25 +131,29 @@ class TestLoadImageArtifact:
     async def test_load_image_success(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test loading artifact and appending to request."""
         caplog.set_level(logging.INFO)
-        
+
         # Setup mocks
         context = MockCallbackContext()
         artifact_part = MockPart(inline_data=MockInlineData(mime_type="image/jpeg"))
         context.load_artifact.return_value = artifact_part
-        
+
         request_content = MockContent(parts=[MockPart(text="query")])
         request = MockLlmRequest(contents=[request_content])
 
         # Execute
-        await load_image_artifact(as_callback_context(context), cast(LlmRequest, request))
+        await load_image_artifact(
+            as_callback_context(context), cast(LlmRequest, request)
+        )
 
         # Verify artifact loaded
         context.load_artifact.assert_called_once_with("user:current_medical_image")
-        
+
         # Verify appended to request
+        assert request.contents is not None
+        assert request.contents[0].parts is not None
         assert len(request.contents[0].parts) == 2
         assert request.contents[0].parts[1] == artifact_part
-        
+
         # Verify logging
         assert "Found artifact" in caplog.text
 
@@ -155,31 +161,37 @@ class TestLoadImageArtifact:
     async def test_load_image_not_found(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test handling missing artifact."""
         caplog.set_level(logging.DEBUG)
-        
+
         context = MockCallbackContext()
         context.load_artifact.return_value = None
-        
+
         request = MockLlmRequest(contents=[MockContent(parts=[])])
 
         # Execute
-        await load_image_artifact(as_callback_context(context), cast(LlmRequest, request))
+        await load_image_artifact(
+            as_callback_context(context), cast(LlmRequest, request)
+        )
 
         # Verify check but no append
         context.load_artifact.assert_called_once()
+        assert request.contents is not None
+        assert request.contents[0].parts is not None
         assert len(request.contents[0].parts) == 0
 
     @pytest.mark.asyncio
     async def test_load_error(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test handling error during load."""
         caplog.set_level(logging.DEBUG)
-        
+
         context = MockCallbackContext()
         context.load_artifact.side_effect = Exception("DB error")
-        
+
         request = MockLlmRequest(contents=[])
 
         # Execute
-        await load_image_artifact(as_callback_context(context), cast(LlmRequest, request))
+        await load_image_artifact(
+            as_callback_context(context), cast(LlmRequest, request)
+        )
 
         # Verify error logged
         assert "Could not load image artifact" in caplog.text
@@ -191,12 +203,14 @@ class TestLoadImageArtifact:
         context = MockCallbackContext()
         artifact_part = MockPart()
         context.load_artifact.return_value = artifact_part
-        
+
         # Content with None parts
         msg = MockContent(parts=None)
         request = MockLlmRequest(contents=[msg])
 
-        await load_image_artifact(as_callback_context(context), cast(LlmRequest, request))
+        await load_image_artifact(
+            as_callback_context(context), cast(LlmRequest, request)
+        )
 
         # Verify parts list created and appended
         assert msg.parts is not None

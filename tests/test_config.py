@@ -221,8 +221,8 @@ class TestServerEnv:
         assert "LOCAL_MODEL_NAME" in output
         assert "llama3" in output
 
-
-    def test_server_env_ignores_extra_fields(        self, valid_server_env: dict[str, str]
+    def test_server_env_ignores_extra_fields(
+        self, valid_server_env: dict[str, str]
     ) -> None:
         """Test that extra environment variables are ignored."""
         data = {**valid_server_env, "EXTRA_VAR": "extra-value", "PATH": "/usr/bin"}
