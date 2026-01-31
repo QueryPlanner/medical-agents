@@ -159,6 +159,24 @@ class ServerEnv(BaseModel):
         description="OpenRouter API key for LiteLLM integration",
     )
 
+    model_provider: Literal["GOOGLE", "OPENROUTER", "LOCAL"] = Field(
+        default="GOOGLE",
+        alias="MODEL_PROVIDER",
+        description="Model provider to use (GOOGLE, OPENROUTER, LOCAL)",
+    )
+
+    local_model_base_url: str | None = Field(
+        default=None,
+        alias="LOCAL_MODEL_BASE_URL",
+        description="Base URL for local model (e.g. http://localhost:1234/v1)",
+    )
+
+    local_model_name: str | None = Field(
+        default=None,
+        alias="LOCAL_MODEL_NAME",
+        description="Model identifier for local model",
+    )
+
     allow_origins: str = Field(
         default='["http://127.0.0.1", "http://127.0.0.1:8080"]',
         alias="ALLOW_ORIGINS",
@@ -199,6 +217,10 @@ class ServerEnv(BaseModel):
             print(f"DB_POOL_TIMEOUT:       {self.db_pool_timeout}")
         masked_key = "********" if self.openrouter_api_key else None
         print(f"OPENROUTER_KEY:        {masked_key}")
+        print(f"MODEL_PROVIDER:        {self.model_provider}")
+        if self.model_provider == "LOCAL":
+            print(f"LOCAL_MODEL_BASE_URL:  {self.local_model_base_url}")
+            print(f"LOCAL_MODEL_NAME:      {self.local_model_name}")
         print(f"HOST:                  {self.host}")
         print(f"PORT:                  {self.port}")
         print(f"ALLOW_ORIGINS:         {self.allow_origins}\n\n")

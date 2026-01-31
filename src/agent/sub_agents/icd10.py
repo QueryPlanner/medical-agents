@@ -1,6 +1,6 @@
 from google.adk.agents import LlmAgent
 
-from ..model import model
+from ..model import sub_agent_model
 from ..prompt import return_icd10_instruction
 
 icd10_agent = LlmAgent(
@@ -10,5 +10,5 @@ icd10_agent = LlmAgent(
         "clinical notes to find diagnosis codes."
     ),
     instruction=return_icd10_instruction(),
-    model=model,
+    model=sub_agent_model,
 )

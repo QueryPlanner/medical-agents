@@ -7,10 +7,9 @@ from google.adk.apps import App
 from google.adk.plugins.global_instruction_plugin import GlobalInstructionPlugin
 from google.adk.plugins.logging_plugin import LoggingPlugin
 from google.adk.tools import AgentTool
-from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
-from .callbacks import LoggingCallbacks, add_session_to_memory
-from .model import model
+from .callbacks import LoggingCallbacks, add_session_to_memory, save_image_to_artifact
+from .model import router_model
 from .prompt import (
     return_description_root,
     return_global_instruction,
@@ -27,12 +26,12 @@ logging_callbacks = LoggingCallbacks()
 root_agent = LlmAgent(
     name="MedicalRouter",
     description=return_description_root(),
-    before_agent_callback=logging_callbacks.before_agent,
+    before_agent_callback=[logging_callbacks.before_agent, save_image_to_artifact],
     after_agent_callback=[logging_callbacks.after_agent, add_session_to_memory],
-    model=model,
+    model=router_model,
     instruction=return_instruction_root(),
     tools=[
-        PreloadMemoryTool(),
+        # PreloadMemoryTool(),
         AgentTool(icd10_agent),
         AgentTool(soap_agent),
         AgentTool(image_agent),
