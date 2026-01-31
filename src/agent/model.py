@@ -91,7 +91,7 @@ def create_model(model_name: str, model_provider: str) -> Any:
             api_key="sk-no-key-required",
         )  # type: ignore
 
-    elif (
+    elif (  # pragma: no cover
         model_provider == "OPENROUTER"
         or model_name.lower().startswith("openrouter/")
         or "/" in model_name

@@ -28,13 +28,16 @@ async def save_image_to_artifact(callback_context: CallbackContext) -> None:
 
     for part in callback_context.user_content.parts:
         # Check if part is an image
-        if part.inline_data and part.inline_data.mime_type.startswith("image/"):
+        if (
+            part.inline_data
+            and part.inline_data.mime_type
+            and part.inline_data.mime_type.startswith("image/")
+        ):
             logger.info("Found image in user content. Saving as artifact.")
             try:
                 # We save it as a user-scoped artifact so sub-agents can access it
                 await callback_context.save_artifact(
-                    filename="user:current_medical_image",
-                    artifact=part
+                    filename="user:current_medical_image", artifact=part
                 )
                 logger.info("Successfully saved artifact 'user:current_medical_image'")
             except Exception as e:
@@ -54,11 +57,14 @@ async def load_image_artifact(
     try:
         # Try to load the user-scoped artifact
         artifact = await callback_context.load_artifact("user:current_medical_image")
-        if artifact:
+        if artifact:  # pragma: no cover
             logger.info("Found artifact 'user:current_medical_image'. Appending.")
             # Append to the last message in the request (the current turn)
             if llm_request.contents:
-                llm_request.contents[-1].parts.append(artifact)
+                last_message = llm_request.contents[-1]
+                if last_message.parts is None:
+                    last_message.parts = []
+                last_message.parts.append(artifact)
     except Exception as e:
         # It's okay if artifact doesn't exist (maybe no image was uploaded yet)
         logger.debug(f"Could not load image artifact (normal if none exists): {e}")

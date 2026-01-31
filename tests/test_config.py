@@ -200,8 +200,29 @@ class TestServerEnv:
         assert "DB_MAX_OVERFLOW" in output
         assert "DB_POOL_TIMEOUT" in output
 
-    def test_server_env_ignores_extra_fields(
-        self, valid_server_env: dict[str, str]
+    def test_server_env_print_config_local_provider(
+        self, valid_server_env: dict[str, str], capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Test print_config outputs LOCAL model settings."""
+        data = {
+            **valid_server_env,
+            "MODEL_PROVIDER": "LOCAL",
+            "LOCAL_MODEL_BASE_URL": "http://localhost:11434",
+            "LOCAL_MODEL_NAME": "llama3",
+        }
+        env = ServerEnv.model_validate(data)
+        env.print_config()
+
+        captured = capsys.readouterr()
+        output = captured.out
+
+        assert "LOCAL_MODEL_BASE_URL" in output
+        assert "http://localhost:11434" in output
+        assert "LOCAL_MODEL_NAME" in output
+        assert "llama3" in output
+
+
+    def test_server_env_ignores_extra_fields(        self, valid_server_env: dict[str, str]
     ) -> None:
         """Test that extra environment variables are ignored."""
         data = {**valid_server_env, "EXTRA_VAR": "extra-value", "PATH": "/usr/bin"}
