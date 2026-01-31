@@ -1,5 +1,10 @@
 """Shared pytest fixtures for all tests."""
 
+import os
+
+# Set AGENT_NAME environment variable before any imports that might use it
+os.environ.setdefault("AGENT_NAME", "test-agent")
+
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager
 from typing import Any
