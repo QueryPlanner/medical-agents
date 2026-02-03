@@ -9,7 +9,7 @@ export default function DialogueBox() {
   if (!currentSpeaker && !dialogueText) return null;
 
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-4xl z-50 px-4">
+    <div className="absolute bottom-8 left-8 right-8 z-50 px-4">
       {/* Speaker Name Badge */}
       <div className="absolute -top-4 left-8 z-10">
          <div className="bg-cyan-950/90 border border-cyan-500/30 text-cyan-400 px-4 py-1 rounded-t-lg font-mono text-sm tracking-widest uppercase backdrop-blur-md shadow-[0_0_15px_rgba(34,211,238,0.2)]">

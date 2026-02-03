@@ -53,7 +53,8 @@ export function useMockScript() {
     await new Promise(r => setTimeout(r, 1500));
 
     // --- 0:40 The Catch (Smart Interruption) ---
-    store.enterStage('ICD10Agent');
+    store.exitStage('SOAPGenerator'); // Scribe leaves
+    store.enterStage('ICD10Agent');   // Coder enters (same spot)
     store.addLog('ICD10Agent', 'AUDIT ALERT: Specificity Mismatch', 'alert');
     store.setSpeaker('ICD10Agent', "Correction needed. Patient described 'flashing lights' and 'zig-zag lines'. This is Migraine with Aura, not generic Headache.");
     
@@ -62,7 +63,9 @@ export function useMockScript() {
     store.updateSoapSection('assessment', "Primary: Migraine with Aura, intractable (G43.109).");
     store.addLog('ICD10Agent', 'Code validated against LCD policies.', 'success');
     
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 2000));
+    store.exitStage('ICD10Agent'); // Transition Out
+    await new Promise(r => setTimeout(r, 1000));
 
     // --- 0:55 Multimodal ---
     store.setSpeaker('MedicalRouter', "Processing supplemental data. X-Ray image detected.");

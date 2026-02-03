@@ -1,7 +1,7 @@
 "use client";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDirectorStore } from '@/stores/useDirectorStore';
-import { ScanEye, AlertTriangle } from 'lucide-react';
+import { ScanEye } from 'lucide-react';
 
 export default function XRayOverlay() {
   const { xrayActive } = useDirectorStore();
@@ -22,11 +22,13 @@ export default function XRayOverlay() {
                 <span className="animate-pulse text-red-400 font-bold">DETECTED: FRACTURE</span>
             </div>
 
-            {/* X-Ray Placeholder - Since we don't have a real image yet, we style a div to look like one */}
-            <div className="w-full h-full bg-slate-900 flex items-center justify-center relative">
-               {/* Grayscale gradient to simulate x-ray structure */}
-               <div className="w-32 h-64 bg-gradient-to-b from-slate-800 to-slate-600 rounded-full blur-sm opacity-50 transform -rotate-12 translate-y-10" />
-               <div className="w-64 h-32 bg-gradient-to-r from-slate-800 to-slate-600 rounded-full blur-md opacity-30 absolute top-1/3" />
+            {/* X-Ray Image */}
+            <div className="w-full h-full bg-black flex items-center justify-center relative">
+               <img 
+                 src="/x-ray-skull-from-right-side.jpg" 
+                 alt="X-Ray Scan" 
+                 className="w-full h-full object-cover opacity-80"
+               />
                
                {/* Fracture Highlight Box */}
                <motion.div 
