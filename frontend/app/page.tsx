@@ -8,11 +8,20 @@ import LiveTerminal from "@/components/Terminal/LiveTerminal";
 import { useMockScript } from "@/hooks/useMockScript";
 
 export default function Home() {
-  useMockScript();
+  const { isPlaying } = useMockScript();
 
   return (
     <main className="flex h-screen w-screen bg-slate-950 overflow-hidden">
       
+      {/* Start Prompt */}
+      {!isPlaying && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pointer-events-none pt-20">
+          <div className="bg-slate-950/80 backdrop-blur-sm border border-cyan-500/30 px-8 py-4 rounded-xl shadow-[0_0_30px_rgba(6,182,212,0.2)] animate-pulse">
+            <span className="text-cyan-400 font-mono text-xl font-bold tracking-widest">PRESS &apos;D&apos; TO START DEMO</span>
+          </div>
+        </div>
+      )}
+
       {/* Visual Novel Stage (70%) */}
       <section className="relative w-[70%] h-full border-r border-slate-800">
         <Background />

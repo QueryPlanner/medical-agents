@@ -25,7 +25,7 @@ export default function SpriteContainer() {
           return (
             <motion.div
               key={id}
-              className={`absolute bottom-0 transition-all duration-500 ${config.position}`}
+              className={`absolute -bottom-12 transition-all duration-500 ${config.position}`}
               // Entrance/Exit Animation
               initial={{ y: 200, opacity: 0 }}
               animate={{ 
