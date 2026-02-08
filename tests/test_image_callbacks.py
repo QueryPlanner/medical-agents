@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 from typing import Any, cast
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from google.adk.agents.callback_context import CallbackContext
@@ -159,7 +159,9 @@ class TestLocalFileLoading:
 
         # Verify logging
         assert f"Found local image path in text: {image_file}" in caplog.text
-        assert f"Successfully loaded/saved artifact from path: {image_file}" in caplog.text
+        assert (
+            f"Successfully loaded/saved artifact from path: {image_file}" in caplog.text
+        )
 
     @pytest.mark.asyncio
     async def test_security_check_path_traversal(
@@ -171,15 +173,15 @@ class TestLocalFileLoading:
         # Simulate a path outside CWD (e.g. /etc/passwd or just a parent dir)
         # We'll use a path that is clearly absolute and not under CWD
         # Assuming test runs in a project dir, /tmp is usually outside
-        unsafe_path = "/tmp/secret.jpg"
-        
+        unsafe_path = "/unsafe/secret.jpg"
+
         text_part = MockPart(text=f"Analyze {unsafe_path}")
         content = MockContent(parts=[text_part])
         context = MockCallbackContext(user_content=content)
 
-        # We don't patch cwd here, so it uses real CWD. 
+        # We don't patch cwd here, so it uses real CWD.
         # Ensure /tmp is not in CWD (which is usually true)
-        
+
         await save_image_to_artifact(as_callback_context(context))
 
         # Verify NOT saved
@@ -196,7 +198,8 @@ class TestLocalFileLoading:
         """Test handling when file does not exist."""
         caplog.set_level(logging.INFO)
 
-        # Path exists in theory (relative to cwd mock) but file doesn't exist on disk
+        # Path exists in theory (relative to cwd mock) but file doesn't exist
+        # on disk
         missing_file = tmp_path / "ghost.png"
         text_part = MockPart(text=f"Check {missing_file}")
         content = MockContent(parts=[text_part])
@@ -207,7 +210,7 @@ class TestLocalFileLoading:
 
         # Verify NOT saved
         context.save_artifact.assert_not_called()
-        
+
         # Should not log success or found
         assert "Found local image path" not in caplog.text
 
@@ -226,9 +229,11 @@ class TestLocalFileLoading:
         context = MockCallbackContext(user_content=content)
 
         # Patch open to raise exception
-        with patch("agent.callbacks.Path.cwd", return_value=tmp_path):
-            with patch("pathlib.Path.open", side_effect=Exception("Disk error")):
-                await save_image_to_artifact(as_callback_context(context))
+        with (
+            patch("agent.callbacks.Path.cwd", return_value=tmp_path),
+            patch("pathlib.Path.open", side_effect=Exception("Disk error")),
+        ):
+            await save_image_to_artifact(as_callback_context(context))
 
         # Verify error logged
         assert "Failed to load local image artifact: Disk error" in caplog.text
@@ -265,9 +270,11 @@ class TestLocalFileLoading:
         context = MockCallbackContext(user_content=content)
 
         # Patch cwd and mimetypes
-        with patch("agent.callbacks.Path.cwd", return_value=tmp_path):
-            with patch("mimetypes.guess_type", return_value=(None, None)):
-                await save_image_to_artifact(as_callback_context(context))
+        with (
+            patch("agent.callbacks.Path.cwd", return_value=tmp_path),
+            patch("mimetypes.guess_type", return_value=(None, None)),
+        ):
+            await save_image_to_artifact(as_callback_context(context))
 
         # Verify artifact saved with fallback mime type
         context.save_artifact.assert_called_once()
