@@ -6,10 +6,11 @@ export default function Background() {
     <div className="fixed inset-0 z-0 w-full h-full overflow-hidden bg-slate-950">
       <div className="absolute inset-0 opacity-40 blur-[2px]">
          {/* Using generic <img> for now as placeholder is SVG */}
-        <img 
+        <Image 
            src="/medical-agent/background.png" 
            alt="Clinic Background" 
-           className="w-full h-full object-cover"
+           fill
+           className="object-cover"
         />
       </div>
       

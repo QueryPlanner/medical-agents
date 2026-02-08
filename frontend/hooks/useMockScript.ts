@@ -1,12 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDirectorStore } from '@/stores/useDirectorStore';
 
 export function useMockScript() {
   const store = useDirectorStore();
   const [isPlaying, setIsPlaying] = useState(false);
+  const isPlayingRef = useRef(false);
 
   const runScript = useCallback(async () => {
-    if (isPlaying) return;
+    if (isPlayingRef.current) return;
+    isPlayingRef.current = true;
     setIsPlaying(true);
     store.resetScene();
 
@@ -91,9 +93,10 @@ export function useMockScript() {
     await new Promise(r => setTimeout(r, 2000));
     store.setImpactScoreboardActive(true);
     
+    isPlayingRef.current = false;
     setIsPlaying(false);
 
-  }, [isPlaying, store]);
+  }, [store]);
 
   // Keyboard Shortcut
   useEffect(() => {

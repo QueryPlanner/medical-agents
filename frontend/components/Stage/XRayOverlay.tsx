@@ -18,7 +18,7 @@ export default function XRayOverlay() {
           <div className="relative rounded-lg overflow-hidden border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] bg-black w-[400px] h-[500px]">
             {/* Header */}
             <div className="absolute top-0 left-0 w-full bg-cyan-950/80 backdrop-blur text-cyan-400 text-xs p-2 flex justify-between items-center z-10">
-                <span className="flex items-center gap-2 font-bold"><ScanEye className="w-4 h-4" /> IMG-2026-XR-L-HAND</span>
+                <span className="flex items-center gap-2 font-bold"><ScanEye className="w-4 h-4" /> IMG-2026-XR-SKULL</span>
                 <span className="animate-pulse text-red-400 font-bold">DETECTED: FRACTURE</span>
             </div>
 
