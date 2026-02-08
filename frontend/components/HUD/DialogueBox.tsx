@@ -9,24 +9,24 @@ export default function DialogueBox() {
   if (!currentSpeaker && !dialogueText) return null;
 
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-4xl z-50 px-4">
+    <div className="absolute bottom-8 left-8 right-8 z-50 px-4">
       {/* Speaker Name Badge */}
       <div className="absolute -top-4 left-8 z-10">
-         <div className="bg-cyan-950/90 border border-cyan-500/30 text-cyan-400 px-4 py-1 rounded-t-lg font-mono text-sm tracking-widest uppercase backdrop-blur-md shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+         <div className="text-cyan-400 px-4 py-1 font-mono text-sm tracking-widest uppercase font-bold">
             {currentSpeaker || 'System'}
          </div>
       </div>
 
       {/* Main Glass Panel */}
-      <div className="relative bg-slate-950/80 backdrop-blur-xl border border-slate-700/50 rounded-lg p-6 min-h-[140px] shadow-2xl">
-        {/* Decorative Corner Accents */}
-        <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-cyan-500" />
-        <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-cyan-500" />
-        <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-cyan-500" />
-        <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-cyan-500" />
+      <div className="relative bg-slate-950/40 backdrop-blur-sm border-none rounded-lg p-6 min-h-[140px]">
+        {/* Decorative Corner Accents - Keep these or remove? Assuming user wants just text */}
+        <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-cyan-500/50" />
+        <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-cyan-500/50" />
+        <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-cyan-500/50" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-cyan-500/50" />
 
         {/* Text Container */}
-        <div className="font-mono text-lg text-slate-100 leading-relaxed tracking-wide">
+        <div className="font-mono text-lg text-slate-100 leading-relaxed tracking-wide shadow-black drop-shadow-md font-bold">
             <Typewriter
               options={{
                 strings: [dialogueText],

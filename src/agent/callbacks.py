@@ -6,6 +6,9 @@ memory persistence.
 """
 
 import logging
+import mimetypes
+import re
+from pathlib import Path
 from typing import Any
 
 from google.adk.agents.callback_context import CallbackContext
@@ -13,6 +16,7 @@ from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.adk.tools import ToolContext
 from google.adk.tools.base_tool import BaseTool
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +46,54 @@ async def save_image_to_artifact(callback_context: CallbackContext) -> None:
                 logger.info("Successfully saved artifact 'user:current_medical_image'")
             except Exception as e:
                 logger.error(f"Failed to save image artifact: {e}")
+
+        # DEMO HACK: Check if text part is a local file path to an image
+        elif part.text and any(
+            part.text.strip().lower().endswith(ext) for ext in (".jpg", ".jpeg", ".png")
+        ):
+            # Basic cleanup of the prompt text if it says "Analyze this..."
+            # For the demo, we assume the path is at the end or is the whole text
+            # if it parses as a valid file.
+            # But the prompt is "Analyze this medical image: /path/..."
+            # Let's simple check if the text CONTAINS a valid file path
+            # Regex updated to support spaces and jpeg
+            match = re.search(
+                r"(/[\w\-\.\s/]+\.(?:jpg|jpeg|png))", part.text, re.IGNORECASE
+            )
+            if match:
+                try:
+                    possible_path = Path(match.group(1)).resolve()
+                    # Security check: Ensure path is within the current working
+                    # directory
+                    if not possible_path.is_relative_to(Path.cwd()):
+                        logger.warning(
+                            f"Access denied: Path {possible_path} is outside the "
+                            "working directory."
+                        )
+                        continue
+
+                    if possible_path.exists() and possible_path.is_file():
+                        logger.info(f"Found local image path in text: {possible_path}")
+                        mime_type, _ = mimetypes.guess_type(possible_path)
+                        if not mime_type:
+                            mime_type = "image/jpeg"
+
+                        with possible_path.open("rb") as f:
+                            image_data = f.read()
+
+                        image_part = types.Part(
+                            inline_data=types.Blob(mime_type=mime_type, data=image_data)
+                        )
+
+                        await callback_context.save_artifact(
+                            filename="user:current_medical_image", artifact=image_part
+                        )
+                        logger.info(
+                            f"Successfully loaded/saved artifact from path: "
+                            f"{possible_path}"
+                        )
+                except Exception as e:
+                    logger.error(f"Failed to load local image artifact: {e}")
 
 
 async def load_image_artifact(

@@ -1,8 +1,9 @@
 """Unit tests for image artifact callbacks."""
 
 import logging
+from pathlib import Path
 from typing import Any, cast
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from google.adk.agents.callback_context import CallbackContext
@@ -122,6 +123,164 @@ class TestSaveImageToArtifact:
 
         # Verify error logged
         assert "Failed to save image artifact: Storage full" in caplog.text
+
+
+class TestLocalFileLoading:
+    """Tests for local file loading logic in save_image_to_artifact."""
+
+    @pytest.mark.asyncio
+    async def test_local_file_load_success(
+        self, caplog: pytest.LogCaptureFixture, tmp_path: Path
+    ) -> None:
+        """Test successfully loading a local image file."""
+        caplog.set_level(logging.INFO)
+
+        # Create a dummy image file in a temp directory
+        # We need to trick the security check (is_relative_to Path.cwd())
+        # So we patch Path.cwd() to return the tmp_path
+        image_file = tmp_path / "test_image.jpg"
+        image_file.write_bytes(b"fake image data")
+
+        text_part = MockPart(text=f"Analyze this image: {image_file}")
+        content = MockContent(parts=[text_part])
+        context = MockCallbackContext(user_content=content)
+
+        with patch("agent.callbacks.Path.cwd", return_value=tmp_path):
+            await save_image_to_artifact(as_callback_context(context))
+
+        # Verify artifact saved
+        context.save_artifact.assert_called_once()
+        call_args = context.save_artifact.call_args
+        assert call_args.kwargs["filename"] == "user:current_medical_image"
+        # Check artifact content
+        saved_artifact = call_args.kwargs["artifact"]
+        assert saved_artifact.inline_data.data == b"fake image data"
+        assert saved_artifact.inline_data.mime_type == "image/jpeg"
+
+        # Verify logging
+        assert f"Found local image path in text: {image_file}" in caplog.text
+        assert (
+            f"Successfully loaded/saved artifact from path: {image_file}" in caplog.text
+        )
+
+    @pytest.mark.asyncio
+    async def test_security_check_path_traversal(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test that paths outside the working directory are rejected."""
+        caplog.set_level(logging.WARNING)
+
+        # Simulate a path outside CWD (e.g. /etc/passwd or just a parent dir)
+        # We'll use a path that is clearly absolute and not under CWD
+        # Assuming test runs in a project dir, /tmp is usually outside
+        unsafe_path = "/unsafe/secret.jpg"
+
+        text_part = MockPart(text=f"Analyze {unsafe_path}")
+        content = MockContent(parts=[text_part])
+        context = MockCallbackContext(user_content=content)
+
+        # We don't patch cwd here, so it uses real CWD.
+        # Ensure /tmp is not in CWD (which is usually true)
+
+        await save_image_to_artifact(as_callback_context(context))
+
+        # Verify NOT saved
+        context.save_artifact.assert_not_called()
+
+        # Verify warning log
+        assert "Access denied" in caplog.text
+        assert "outside the working directory" in caplog.text
+
+    @pytest.mark.asyncio
+    async def test_local_file_not_found(
+        self, caplog: pytest.LogCaptureFixture, tmp_path: Path
+    ) -> None:
+        """Test handling when file does not exist."""
+        caplog.set_level(logging.INFO)
+
+        # Path exists in theory (relative to cwd mock) but file doesn't exist
+        # on disk
+        missing_file = tmp_path / "ghost.png"
+        text_part = MockPart(text=f"Check {missing_file}")
+        content = MockContent(parts=[text_part])
+        context = MockCallbackContext(user_content=content)
+
+        with patch("agent.callbacks.Path.cwd", return_value=tmp_path):
+            await save_image_to_artifact(as_callback_context(context))
+
+        # Verify NOT saved
+        context.save_artifact.assert_not_called()
+
+        # Should not log success or found
+        assert "Found local image path" not in caplog.text
+
+    @pytest.mark.asyncio
+    async def test_load_exception(
+        self, caplog: pytest.LogCaptureFixture, tmp_path: Path
+    ) -> None:
+        """Test handling exceptions during file reading."""
+        caplog.set_level(logging.ERROR)
+
+        image_file = tmp_path / "corrupt.png"
+        image_file.write_bytes(b"data")
+
+        text_part = MockPart(text=f"Read {image_file}")
+        content = MockContent(parts=[text_part])
+        context = MockCallbackContext(user_content=content)
+
+        # Patch open to raise exception
+        with (
+            patch("agent.callbacks.Path.cwd", return_value=tmp_path),
+            patch("pathlib.Path.open", side_effect=Exception("Disk error")),
+        ):
+            await save_image_to_artifact(as_callback_context(context))
+
+        # Verify error logged
+        assert "Failed to load local image artifact: Disk error" in caplog.text
+
+    @pytest.mark.asyncio
+    async def test_regex_no_match(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Test case where extension matches but regex does not."""
+        caplog.set_level(logging.INFO)
+
+        # "image.jpg" ends with .jpg but lacks leading slash required by regex
+        text_part = MockPart(text="image.jpg")
+        content = MockContent(parts=[text_part])
+        context = MockCallbackContext(user_content=content)
+
+        await save_image_to_artifact(as_callback_context(context))
+
+        # Verify nothing happened (no error, no save)
+        context.save_artifact.assert_not_called()
+        # Should not log "Found local image path"
+        assert "Found local image path" not in caplog.text
+
+    @pytest.mark.asyncio
+    async def test_mime_type_fallback(
+        self, caplog: pytest.LogCaptureFixture, tmp_path: Path
+    ) -> None:
+        """Test fallback to image/jpeg when mime type guessing fails."""
+        caplog.set_level(logging.INFO)
+
+        image_file = tmp_path / "unknown.jpg"
+        image_file.write_bytes(b"data")
+
+        text_part = MockPart(text=f"See {image_file}")
+        content = MockContent(parts=[text_part])
+        context = MockCallbackContext(user_content=content)
+
+        # Patch cwd and mimetypes
+        with (
+            patch("agent.callbacks.Path.cwd", return_value=tmp_path),
+            patch("mimetypes.guess_type", return_value=(None, None)),
+        ):
+            await save_image_to_artifact(as_callback_context(context))
+
+        # Verify artifact saved with fallback mime type
+        context.save_artifact.assert_called_once()
+        call_args = context.save_artifact.call_args
+        saved_artifact = call_args.kwargs["artifact"]
+        assert saved_artifact.inline_data.mime_type == "image/jpeg"
 
 
 class TestLoadImageArtifact:

@@ -6,8 +6,8 @@ import { useDirectorStore } from "@/stores/useDirectorStore";
 const AGENTS: Record<string, { src: string; position: string }> = {
   MedicalRouter: { src: '/medical-agent/coordinator-bg-rm.png', position: 'justify-center z-10' }, // Center back
   SOAPGenerator: { src: '/medical-agent/scribe-bg-rm.png', position: 'left-10 z-20' },          // Left front
-  ICD10Agent: { src: '/medical-agent/coder-bg-rm.png', position: 'right-10 z-20' },           // Right front
-  ImageAnalyzer: { src: '/sprites/vision.svg', position: 'right-32 z-30' },       // Overlays ICD sometimes
+  ICD10Agent: { src: '/medical-agent/coder-bg-rm.png', position: 'left-10 z-30' },           // Left front (Replaces Scribe)
+  ImageAnalyzer: { src: '/medical-agent/scribe-bg-rm.png', position: 'right-52 z-30' },       // Overlays ICD sometimes
 };
 
 export default function SpriteContainer() {
@@ -25,7 +25,7 @@ export default function SpriteContainer() {
           return (
             <motion.div
               key={id}
-              className={`absolute bottom-0 transition-all duration-500 ${config.position}`}
+              className={`absolute -bottom-12 transition-all duration-500 ${config.position}`}
               // Entrance/Exit Animation
               initial={{ y: 200, opacity: 0 }}
               animate={{ 
