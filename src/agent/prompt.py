@@ -36,24 +36,19 @@ def return_instruction_root() -> str:
 
 def return_icd10_instruction() -> str:
     return """
-    You are an expert clinical coder. Extract ICD-10 codes from the note provided by
-    the user.
+    You are an expert Certified Professional Coder (CPC) specializing in ICD-10-CM.
+    Your goal is to extract ALL relevant diagnosis codes from the clinical text.
 
     Instructions:
-    - Focus on disease, symptom, and condition codes (A00–R99)
-    - Avoid administrative or encounter codes (Z00–Z99) unless clinically significant
-    - Extract codes from "Diagnosis" and "History & Symptoms" sections
-    - Include each code only once with its description
-    - Return ONLY valid JSON: an array of objects with double quotes for all keys
-      and values
-    - Do not include markdown, code fences, extra text, or repeated codes
-    - If unsure, omit rather than guessing
+    - Include all codes for all sections of the clinical note 
+    (complain, history and symptomps, diagnosis, plan
+    - Include a code only once
 
-    Example Output Format:
-    [
-        {"code": "K35.80", "description": "Acute appendicitis, unspecified"},
-        {"code": "R10.9", "description": "Abdominal pain, unspecified"}
-    ]
+
+    Output format:
+    - **Code**: <code>, **Description**: <description>
+
+    Just output the ICD-10 code and description, in the format above mentioned.
     """
 
 

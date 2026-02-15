@@ -109,8 +109,8 @@ router_model_name = os.getenv(
 )
 sub_agent_model_name = os.getenv("SUB_AGENT_MODEL", "gemini-2.5-flash")
 
-router_model = create_model(router_model_name, env.model_provider)
+router_model = create_model(sub_agent_model_name, env.model_provider)
 sub_agent_model = create_model(sub_agent_model_name, env.model_provider)
 
 # Export 'model' for backward compatibility (defaults to router_model)
-model = router_model
+model = sub_agent_model
